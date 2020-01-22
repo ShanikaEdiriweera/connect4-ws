@@ -14,16 +14,31 @@
 <script>
     var socket = new WebSocket("ws://localhost:3000");
     socket.onmessage = function(event){
-        document.getElementById("hello").innerHTML = event.data;
+        const msg = JSON.parse(event.data);
+
+        if (msg.type === "REGISTER_USER") {
+            sessionStorage.setItem('player-id', msg.id);
+        }
+
+        if (msg.type === "GAME-PENDING") {
+            document.getElementById("play-button").innerHTML = "Pending for player...";
+        }
+
+        if (msg.type === "GAME-START") {
+            window.location.href = '/play';
+        }
     }
 
     socket.onopen = function(){
         socket.send("Hello from the client!");
     };
-</script> 
-<form action="/play" method="get">
-<button type="submit" class="button"> Play! </button>
-</form>
+
+
+    function playGameAction() {
+        socket.send("PLAY");
+    }
+</script>
+<button type="submit" class="button" id="play-button" onclick="playGameAction()"> Play Game! </button>
 
 </body>
 
