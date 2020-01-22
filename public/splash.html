@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel = "stylesheet" href = "stylesheets/style.css">
+    <meta charset="UTF-8">
+    <title>Connect Four Homescreen</title>
+    <style>
+    </style>
+</head>
+
+<body>
+<script type="text/javascript" src="splash.js"></script> 
+<script>
+    var socket = new WebSocket("ws://localhost:3000");
+    socket.onmessage = function(event){
+        const msg = JSON.parse(event.data);
+
+        if (msg.type === "REGISTER_USER") {
+            sessionStorage.setItem('player-id', msg.id);
+        }
+
+        if (msg.type === "GAME-PENDING") {
+            document.getElementById("play-button").innerHTML = "Pending for player...";
+        }
+
+        if (msg.type === "GAME-START") {
+            window.location.href = '/play';
+        }
+    }
+
+    socket.onopen = function(){
+        socket.send("Hello from the client!");
+    };
+
+
+    function playGameAction() {
+        socket.send("PLAY");
+    }
+</script>
+<button type="submit" class="button" id="play-button" onclick="playGameAction()"> Play Game! </button>
+
+</body>
+
+</html>

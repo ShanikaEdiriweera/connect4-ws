@@ -1,0 +1,23 @@
+body {
+  background-color: papayawhip;
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+
+.button {
+  background-color: rgb(226, 125, 9);
+  border: none;
+  color: white;  
+  padding: 15px 25px;
+  text-align: center;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.button:hover {
+  background-color: rgb(3, 187, 12);
+}
