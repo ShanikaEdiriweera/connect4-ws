@@ -19,8 +19,8 @@
 
 
     // text 
-    const TEXT_PLAY2 = "OPPONENT";
-    const TEXT_PLAY = "MY";
+    const TEXT_PLAY2 = "Player 2";
+    const TEXT_PLAY = "Player 1";
     const TEXT_TIE = "TIE";
     const TEXT_VICTORY = "VICTORY!";
 
@@ -75,29 +75,6 @@
         }
     }
     
-
-    var socket = new WebSocket("ws://localhost:3000");
-    socket.onopen = function () {
-        socket.send(sessionStorage.getItem('player-id'));
-    };
-
-    socket.onmessage = function (event) {
-        const msg = JSON.parse(event.data);
-
-        if (msg.type === "HIGHLIGHT-CELL") {
-            console.log(msg);
-            selectCellBySocket(msg.selectedRow, msg.selectedColumn);
-        }
-
-        if (msg.type === "CONNECTION-LOST") {
-            alert("Game Terminated by opponet");
-        }
-    }
-
-    let selectedColumn;
-    let selectedRow;
-    let selected;
-
     //set up the canvas and context
     var canv = document.createElement("canvas");
     document.body.appendChild(canv);
@@ -216,7 +193,6 @@
     }
 
     function click(ev) {
-        // console.log(ev)
 
         if (gameOver) {
             newGame();
@@ -224,23 +200,14 @@
         }
 
         if (!playersTurn) {
-            return
+            //TODO return
         }
 
         selectCell();
     }
 
-    function updateTurn() {
-        if (playersTurn) {
-            document.getElementById("notify").innerHTML = "Your turn...";
-        } else {
-            document.getElementById("notify").innerHTML = "Opponent turn...";
-        }
-    }
-
     function createGrid() {
         grid = [];
-        updateTurn();
 
         //set up cell size and margins
         let cell, marginX, marginY;
@@ -346,11 +313,6 @@
         for (let i = GRID_ROWS - 1; i >= 0; i--) {
             if (grid[i][col].owner == null) {
                 grid[i][col].highlight = playersTurn;
-
-                selectedColumn = col;
-                selectedRow = i;
-                selected = playersTurn;
-   
                 return grid[i][col];
             }
         }
@@ -359,32 +321,27 @@
 
     function highlightGrid(/** @type {MouseEvent} */ ev) {
         if (!playersTurn || gameOver) {
-            return;
+            //TODO return;
         }
         highlightCell(ev.clientX, ev.clientY);
     }
 
     function newGame() {
-        playersTurn = Math.random() < 0.5; // BIBI
+        playersTurn = Math.random() < 0.5;
         gameOver = false;
         gameTied = false;
         createGrid();
     }
 
     function selectCell() {
-        socket.send(JSON.stringify({ type: 'SELECT-CELL', selectedRow, selectedColumn, selected }));
-    }
-
-    function selectCellBySocket(x, y) {
         let highlighting = false;
-
-        OUTER: for (let i = GRID_ROWS - 1; i >= 0; i--) {
-            for (let j = GRID_COLS - 1; j >= 0; j--) {
-                if (grid[x][y] != null) {
+        OUTER: for (let row of grid) {
+            for (let cell of row) {
+                if (cell.highlight != null) {
                     highlighting = true;
-                    grid[x][y].highlight = null;
-                    grid[x][y].owner = playersTurn;
-                    if (checkWin(grid[x][y].row, grid[x][y].col)) {
+                    cell.highlight = null;
+                    cell.owner = playersTurn;
+                    if (checkWin(cell.row, cell.col)) {
                         gameOver = true;
                     }
                     break OUTER;
@@ -417,7 +374,6 @@
         // switch the player if no game over
         if (!gameOver) {
             playersTurn = !playersTurn;
-            updateTurn();
         }
     }
 

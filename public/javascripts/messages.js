@@ -37,19 +37,7 @@
     };
     exports.S_GAME_ABORTED = JSON.stringify(exports.O_GAME_ABORTED);
 
-
-
-    exports.O_GAME_PENDING = {
-      type: "GAME-PENDING"
-    };
-    exports.S_GAME_PENDING = JSON.stringify(exports.O_GAME_PENDING);
-
-  exports.O_GAME_START = {
-    type: "GAME-START"
-  };
-  exports.S_GAME_START = JSON.stringify(exports.O_GAME_START);
-
-  /*
+/*
    * Server to Player A & B: game over with result won/loss
    */
   exports.T_GAME_OVER = "GAME-OVER";

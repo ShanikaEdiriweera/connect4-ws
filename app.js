@@ -5,8 +5,7 @@ var WebSocket = require("ws");
 // var indexRouter = require("./routes/index");
 var messages = require("./public/javascripts/messages"); 
 
-var port = process.argv[2] || 3000;
-
+var port = process.argv[2];
 var app = express(); 
 
 var gameStatus = require("./statTracker"); 
@@ -40,66 +39,79 @@ wss.on('connection', function(WebSocket){
 
 var websockets = {};
 
+// setInterval(function() {
+//   for (let i in websockets) {
+//     if (Object.prototype.hasOwnProperty.call(websockets,i)) {
+//       let gameObj = websockets[i];
+//       //if the gameObj has a final status, the game is complete/aborted
+//       if (gameObj.finalStatus != null) {
+//         delete websockets[i];
+//       }
+//     }
+//   }
+// }, 50000);
+
 var currentGame = new Game(gameStatus.gamesInitialized++);
 var connectionID = 0; //each websocket receives a unique ID
 
-
-let pendingUsers = [];
-let games = [];
-
  wss.on("connection", function connection(ws) {
-  //  wss.clients.forEach((client) => {
-  //    console.log(client.id)
-  //  });
-  // con.send(playerType == "A" ? messages.S_PLAYER_A : messages.S_PLAYER_B);
+     let con = ws;
+     con.id = connectionID++;
+     let playerType = currentGame.addPlayer(con);
+     websockets[con.id] = currentGame;
 
-  ws.on("message", function incoming(message) {
-    console.log("[log] " + message);
+  console.log(
+    "Player %s placed in game %s as %s",
+    con.id,
+    currentGame.id,
+    playerType
+  );
 
-    if (message === "PLAY") {
-      let con = ws;
-      con.id = connectionID++;
-      let playerType = currentGame.addPlayer(con);
-      websockets[con.id] = currentGame;
+  con.send(playerType == "A" ? messages.S_PLAYER_A : messages.S_PLAYER_B);
 
-      con.send(JSON.stringify({ type: "REGISTER_USER", id: con.id }))
+  if (currentGame.hasTwoConnectedPlayers()) {
+    currentGame = new Game(gameStatus.gamesInitialized++);
+  }
 
-      console.log(`Player ${con.id} placed in game ${currentGame.id} as ${playerType}`);
-
-      if (playerType == "A") con.send(messages.S_GAME_PENDING);
-      if (playerType == "B") {
-        con.send(messages.S_GAME_START);
-        currentGame.playerA.send(messages.S_GAME_START)
-      }
-
-      if (currentGame.hasTwoConnectedPlayers()) {
-        currentGame = new Game(gameStatus.gamesInitialized++);
-      }
-    }
-
-    if (message.includes("SELECT-CELL")) {
-      let selectMsg = JSON.parse(message);
-      if (selectMsg.type === "SELECT-CELL") {
-        wss.clients.forEach(function (client) {
-          // if (client.id == currentGame.playerA.id) client.send(messages.S_GAME_START);
-          client.send(JSON.stringify({ 
-            type: "HIGHLIGHT-CELL",
-            selectedRow: selectMsg.selectedRow,
-            selectedColumn: selectMsg.selectedColumn
-         }));
-        });
-      }
-    }
-  });
-
-  ws.on("close", function(code) {
-    wss.clients.forEach(function (client) {
-      client.send(JSON.stringify({ type: "CONNECTION-LOST" }));
-    });
-    
-  });
+ws.on("message", function incoming(message) {
+  console.log("[log] " + message);
+});
 });
 
+// con.on("close", function(code) {
+//   /*
+//    * code 1001 means almost always closing initiated by the client;
+//    * source: https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent
+//    */
+//   console.log(con.id + " disconnected ...");
+
+//   if (code == "1001") {
+//     /*
+//      * if possible, abort the game; if not, the game is already completed
+//      */
+//     let gameObj = websockets[con.id];
+
+//     if (gameObj.isValidTransition(gameObj.gameState, "ABORTED")) {
+//       gameObj.setStatus("ABORTED");
+
+//       try {
+//         gameObj.playerA.close();
+//         gameObj.playerA = null;
+//       } catch (e) {
+//         console.log("Player A closing: " + e);
+//       }
+
+//       try {
+//         gameObj.playerB.close();
+//         gameObj.playerB = null;
+//       } catch (e) {
+//         console.log("Player B closing: " + e);
+//       }
+//     }
+//   }
+
+
+      
 
 server.listen(port, () =>
   console.log('*** Server is up and running on port ' + port + ' ***')
